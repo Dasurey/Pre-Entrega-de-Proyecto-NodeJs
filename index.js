@@ -14,7 +14,7 @@ const fetchData = async (url) => {
 
 // POST
 
-const createProduct = async (url, title, price, category) => {
+const createProduct = async ({ title, price, category }) => {
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -34,9 +34,9 @@ const createProduct = async (url, title, price, category) => {
 
 // DELETE
 
-const deleteProduct = async (url) => {
+const deleteProduct = async (productId) => {
     try {
-        const response = await fetch(url, {
+        const response = await fetch(`${url}/${productId}`, {
             method: 'DELETE'
         });
         const data = await response.json();
@@ -46,28 +46,30 @@ const deleteProduct = async (url) => {
     }
 };
 
-// GET
-
-const [,, method, resource, title, price, category] = process.argv;
+// Procesamiento de argumentos
+const [, , method, resource, ...args] = process.argv;
 
 if (method === 'GET') {
     if (resource === 'products') {
         fetchData(url);
     } else if (resource.startsWith('products/')) {
-        const productId = resource.split('/')[1];
+        const [, productId] = resource.split('/');
         fetchData(`${url}/${productId}`);
     }
 } else if (method === 'POST' && resource === 'products') {
+    const [title, price, category] = args;
     if (title && price && category) {
-        createProduct(url, title, price, category);
+        createProduct({ title, price, category });
     } else {
         console.log('Faltan argumentos. Uso: npm run start POST products <title> <price> <category>');
     }
 } else if (method === 'DELETE' && resource.startsWith('products/')) {
-    const productId = resource.split('/')[1];
+    const [, productId] = resource.split('/');
     if (productId) {
-        deleteProduct(`${url}/${productId}`);
+        deleteProduct(productId);
     } else {
         console.log('Falta el productId. Uso: npm run start DELETE products/<productId>');
     }
+} else {
+    console.log('Comando no reconocido.');
 }
